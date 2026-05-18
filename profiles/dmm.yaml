@@ -1,0 +1,21 @@
+name: dmm
+unit_id: 2
+kind: dmm
+registers:
+  - name: range_select
+    address: 0
+    kind: holding
+    value: 1
+  - name: dc_voltage
+    address: 0
+    kind: input
+    value: 4980
+  - name: dc_current
+    address: 1
+    kind: input
+    value: 120
+  - name: resistance
+    address: 2
+    kind: input
+    value: 1000
+faults: []

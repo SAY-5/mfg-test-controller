@@ -1,0 +1,17 @@
+name: thermocouple
+unit_id: 4
+kind: thermocouple
+registers:
+  - name: channel_0_temp
+    address: 0
+    kind: input
+    value: 2300
+  - name: channel_1_temp
+    address: 1
+    kind: input
+    value: 2310
+  - name: cold_junction
+    address: 2
+    kind: input
+    value: 2500
+faults: []

@@ -1,0 +1,25 @@
+name: power_supply
+unit_id: 1
+kind: power_supply
+registers:
+  - name: voltage_setpoint
+    address: 0
+    kind: holding
+    value: 0
+  - name: current_limit
+    address: 1
+    kind: holding
+    value: 0
+  - name: output_enable
+    address: 2
+    kind: holding
+    value: 0
+  - name: voltage_readback
+    address: 0
+    kind: input
+    value: 1200
+  - name: current_readback
+    address: 1
+    kind: input
+    value: 480
+faults: []

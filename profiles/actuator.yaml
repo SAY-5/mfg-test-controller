@@ -1,0 +1,21 @@
+name: actuator
+unit_id: 3
+kind: actuator
+registers:
+  - name: target_position
+    address: 0
+    kind: holding
+    value: 0
+  - name: move_enable
+    address: 1
+    kind: holding
+    value: 0
+  - name: actual_position
+    address: 0
+    kind: input
+    value: 500
+  - name: status_word
+    address: 1
+    kind: input
+    value: 1
+faults: []
