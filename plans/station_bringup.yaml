@@ -1,0 +1,75 @@
+name: station_bringup
+description: >
+  Canonical bring-up plan for a four-instrument test station. Configures the
+  power supply, verifies its readbacks, commands the actuator, and checks the
+  multimeter and thermocouple measurements against per-step thresholds.
+steps:
+  - name: set_supply_voltage
+    device: power_supply
+    action: write
+    register: voltage_setpoint
+    write_value: 1200
+
+  - name: set_supply_current_limit
+    device: power_supply
+    action: write
+    register: current_limit
+    write_value: 500
+
+  - name: enable_supply_output
+    device: power_supply
+    action: write
+    register: output_enable
+    write_value: 1
+
+  - name: check_supply_voltage_readback
+    device: power_supply
+    action: read
+    register: voltage_readback
+    expected_value: 1200
+    tolerance: 25
+
+  - name: check_supply_current_readback
+    device: power_supply
+    action: read
+    register: current_readback
+    expected_range: [400, 520]
+
+  - name: command_actuator_position
+    device: actuator
+    action: write
+    register: target_position
+    write_value: 500
+
+  - name: check_actuator_position
+    device: actuator
+    action: read
+    register: actual_position
+    expected_value: 500
+    tolerance: 10
+
+  - name: check_actuator_status
+    device: actuator
+    action: read
+    register: status_word
+    expected_value: 1
+    tolerance: 0
+
+  - name: check_dmm_dc_voltage
+    device: dmm
+    action: read
+    register: dc_voltage
+    expected_value: 5000
+    tolerance: 50
+
+  - name: check_thermocouple_channel_0
+    device: thermocouple
+    action: read
+    register: channel_0_temp
+    expected_range: [2200, 2400]
+
+  - name: check_thermocouple_cold_junction
+    device: thermocouple
+    action: read
+    register: cold_junction
+    expected_range: [2300, 2700]
