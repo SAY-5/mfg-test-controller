@@ -141,6 +141,32 @@ Plan: station_bringup  [PASS]
 
 A committed copy of the JSON and Markdown forms lives in `docs/`.
 
+## Test-cycle benchmark
+
+`bench/cycle_bench.py` runs the `station_bringup` plan repeatedly against the
+four simulated devices over loopback TCP and measures per-cycle wall-clock,
+per-command round-trip latency, and controller throughput. It runs once with
+clean devices and once with drift and delay faults injected so the
+fault-handling cost is visible.
+
+```
+make bench            # run the benchmark, write bench/results/<timestamp>.json
+make bench-regress    # fail if per-cycle wall-clock regresses past 30%
+```
+
+Indicative numbers from a 200-cycle run (11 commands per cycle):
+
+| Pass | Per-cycle wall-clock (mean) | Command latency P50 / P95 / P99 | Throughput |
+|------|-----------------------------|---------------------------------|------------|
+| Clean | ~1.0 ms | ~0.09 / 0.13 / 0.15 ms | ~10,600 commands/s |
+| Fault-injected | ~2.6 ms | ~0.08 / 1.36 / 1.55 ms | ~4,200 commands/s |
+
+The drift and delay faults roughly halve throughput, which is the expected
+cost of the controller's fault-handling paths. `make bench-regress` compares a
+fresh run against the most recent stored result and fails the build if the
+mean per-cycle wall-clock drifts up by more than 30%. CI runs a small-scale
+bench-smoke pass on every push.
+
 ## What this is not
 
 - Not a real Modbus implementation. There is no Modbus TCP/RTU library, no MBAP

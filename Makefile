@@ -1,4 +1,7 @@
-.PHONY: dev test test-integration lint typecheck run simulate up clean
+.PHONY: dev test test-integration lint typecheck run simulate bench bench-regress up clean
+
+# Iteration count for the test-cycle benchmark.
+BENCH_ITERS ?= 200
 
 # Coverage gate for the unit suite. Raised from the 65% baseline to 70%.
 COV_MIN ?= 70
@@ -15,8 +18,8 @@ test-integration:
 	RUN_INTEGRATION=1 poetry run pytest tests/integration -q
 
 lint:
-	poetry run ruff check src tests
-	poetry run black --check src tests
+	poetry run ruff check src tests bench
+	poetry run black --check src tests bench
 
 typecheck:
 	poetry run mypy
@@ -26,6 +29,12 @@ run:
 
 simulate:
 	poetry run mfg-ctl simulate-fault --profile profiles/dmm.yaml --fault drift
+
+bench:
+	poetry run python bench/cycle_bench.py --iterations $(BENCH_ITERS)
+
+bench-regress:
+	poetry run python bench/cycle_bench.py --iterations $(BENCH_ITERS) --check --no-write
 
 up:
 	docker compose up --build
