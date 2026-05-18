@@ -103,11 +103,17 @@ With Poetry:
 
 ```
 make dev          # poetry install
-make test         # unit tests
+make test         # unit tests + hypothesis property tests, 70% coverage gate
 make typecheck    # mypy strict on src/
 make lint         # ruff + black --check
 make run          # run plans/station_bringup.yaml against simulated devices
 ```
+
+`make test` runs the example-based unit tests plus a hypothesis property and
+fuzz suite (codec round-trips, CRC single-bit-flip detection, threshold
+verdicts against a hand-computed reference, register-map consistency, and a
+frame-parser fuzz that asserts random byte streams never crash the parser).
+It fails the build if line coverage drops below 70%.
 
 The four simulated devices and a controller also run under Docker:
 

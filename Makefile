@@ -1,10 +1,15 @@
 .PHONY: dev test test-integration lint typecheck run simulate up clean
 
+# Coverage gate for the unit suite. Raised from the 65% baseline to 70%.
+COV_MIN ?= 70
+
 dev:
 	poetry install
 
 test:
-	poetry run pytest tests/unit -q
+	poetry run pytest tests/unit -q \
+		--cov=mfg_test_controller --cov-report=term-missing \
+		--cov-fail-under=$(COV_MIN)
 
 test-integration:
 	RUN_INTEGRATION=1 poetry run pytest tests/integration -q

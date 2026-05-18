@@ -51,8 +51,11 @@ jobs:
         run: pipx install poetry
       - name: Install dependencies
         run: poetry install --no-interaction
-      - name: Unit tests
-        run: poetry run pytest tests/unit -q
+      - name: Unit tests with coverage gate
+        run: >-
+          poetry run pytest tests/unit -q
+          --cov=mfg_test_controller --cov-report=term-missing
+          --cov-fail-under=70
 
   test-integration:
     runs-on: ubuntu-latest
