@@ -1,0 +1,123 @@
+{
+  "plan": "station_bringup",
+  "summary": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "all_passed": true,
+    "duration_s": 0.0017,
+    "first_failure": null
+  },
+  "steps": [
+    {
+      "name": "set_supply_voltage",
+      "device": "power_supply",
+      "action": "write",
+      "register": "voltage_setpoint",
+      "passed": true,
+      "measured": 1200.0,
+      "detail": "wrote 1200 to voltage_setpoint",
+      "duration_s": 0.0002
+    },
+    {
+      "name": "set_supply_current_limit",
+      "device": "power_supply",
+      "action": "write",
+      "register": "current_limit",
+      "passed": true,
+      "measured": 500.0,
+      "detail": "wrote 500 to current_limit",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "enable_supply_output",
+      "device": "power_supply",
+      "action": "write",
+      "register": "output_enable",
+      "passed": true,
+      "measured": 1.0,
+      "detail": "wrote 1 to output_enable",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "check_supply_voltage_readback",
+      "device": "power_supply",
+      "action": "read",
+      "register": "voltage_readback",
+      "passed": true,
+      "measured": 1200.0,
+      "detail": "measured 1200, expected 1200 +/- 25 (delta 0)",
+      "duration_s": 0.0002
+    },
+    {
+      "name": "check_supply_current_readback",
+      "device": "power_supply",
+      "action": "read",
+      "register": "current_readback",
+      "passed": true,
+      "measured": 480.0,
+      "detail": "measured 480, expected within [400, 520]",
+      "duration_s": 0.0002
+    },
+    {
+      "name": "command_actuator_position",
+      "device": "actuator",
+      "action": "write",
+      "register": "target_position",
+      "passed": true,
+      "measured": 500.0,
+      "detail": "wrote 500 to target_position",
+      "duration_s": 0.0002
+    },
+    {
+      "name": "check_actuator_position",
+      "device": "actuator",
+      "action": "read",
+      "register": "actual_position",
+      "passed": true,
+      "measured": 500.0,
+      "detail": "measured 500, expected 500 +/- 10 (delta 0)",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "check_actuator_status",
+      "device": "actuator",
+      "action": "read",
+      "register": "status_word",
+      "passed": true,
+      "measured": 1.0,
+      "detail": "measured 1, expected 1 +/- 0 (delta 0)",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "check_dmm_dc_voltage",
+      "device": "dmm",
+      "action": "read",
+      "register": "dc_voltage",
+      "passed": true,
+      "measured": 4980.0,
+      "detail": "measured 4980, expected 5000 +/- 50 (delta 20)",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "check_thermocouple_channel_0",
+      "device": "thermocouple",
+      "action": "read",
+      "register": "channel_0_temp",
+      "passed": true,
+      "measured": 2300.0,
+      "detail": "measured 2300, expected within [2200, 2400]",
+      "duration_s": 0.0001
+    },
+    {
+      "name": "check_thermocouple_cold_junction",
+      "device": "thermocouple",
+      "action": "read",
+      "register": "cold_junction",
+      "passed": true,
+      "measured": 2500.0,
+      "detail": "measured 2500, expected within [2300, 2700]",
+      "duration_s": 0.0001
+    }
+  ]
+}
