@@ -1,0 +1,33 @@
+services:
+  device-power-supply:
+    build: .
+    command: ["serve", "--profile", "profiles/power_supply.yaml", "--host", "0.0.0.0", "--port", "5020"]
+    expose:
+      - "5020"
+
+  device-dmm:
+    build: .
+    command: ["serve", "--profile", "profiles/dmm.yaml", "--host", "0.0.0.0", "--port", "5021"]
+    expose:
+      - "5021"
+
+  device-actuator:
+    build: .
+    command: ["serve", "--profile", "profiles/actuator.yaml", "--host", "0.0.0.0", "--port", "5022"]
+    expose:
+      - "5022"
+
+  device-thermocouple:
+    build: .
+    command: ["serve", "--profile", "profiles/thermocouple.yaml", "--host", "0.0.0.0", "--port", "5023"]
+    expose:
+      - "5023"
+
+  controller:
+    build: .
+    depends_on:
+      - device-power-supply
+      - device-dmm
+      - device-actuator
+      - device-thermocouple
+    command: ["run", "plans/station_bringup.yaml"]

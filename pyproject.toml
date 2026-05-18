@@ -1,0 +1,56 @@
+[project]
+name = "mfg-test-controller"
+version = "0.1.0"
+description = "Python TCP/IP manufacturing test controller: Modbus-style command simulation, fault-injectable simulated devices, threshold-driven test sequencing"
+authors = [{ name = "Sai Asish Y", email = "say.apm35@gmail.com" }]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "click>=8.1.7",
+    "sqlalchemy>=2.0.30",
+    "pydantic>=2.7.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.scripts]
+mfg-ctl = "mfg_test_controller.cli:cli"
+
+[tool.poetry]
+packages = [{ include = "mfg_test_controller", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+pytest-asyncio = "^0.23.7"
+hypothesis = "^6.100.0"
+mypy = "^1.10.0"
+ruff = "^0.4.0"
+black = "^24.4.0"
+types-pyyaml = "^6.0.12"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]
+plugins = ["pydantic.mypy"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP", "C4", "SIM"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = ["integration: loopback TCP integration tests, gated by RUN_INTEGRATION=1"]
