@@ -20,6 +20,11 @@ from mfg_test_controller.report import render_console, render_json, render_markd
 from mfg_test_controller.runner import run_plan_locally
 from mfg_test_controller.server import DeviceServer
 from mfg_test_controller.store import RunStore
+from mfg_test_controller.trends import (
+    RegisterTrend,
+    analyse_register,
+    render_trends_markdown,
+)
 
 DEFAULT_PROFILE_DIR = Path("profiles")
 
@@ -241,6 +246,78 @@ def simulate_fault(
         )
     click.echo("fault configured; run a plan against this profile to observe it")
     _ = faulted
+
+
+@cli.command()
+@click.option("--register", "register", help="Analyse only this register name.")
+@click.option("--station", "station", help="Filter history to this plan/station name.")
+@click.option("--device", "device", help="Filter history to this device name.")
+@click.option(
+    "--limit",
+    "limit",
+    type=float,
+    default=None,
+    help="Threshold limit used to estimate runs-to-failure for trending registers.",
+)
+@click.option("--db", default="sqlite:///test-runs.db", help="Run history DB URL.")
+@click.option(
+    "--export",
+    "export_path",
+    type=click.Path(dir_okay=False),
+    default=None,
+    is_flag=False,
+    flag_value="-",
+    help="Write a Markdown trend report; with no value it prints to stdout.",
+)
+def trends(
+    register: str | None,
+    station: str | None,
+    device: str | None,
+    limit: float | None,
+    db: str,
+    export_path: str | None,
+) -> None:
+    """Analyse measurement drift across the stored test-run history."""
+    store = RunStore(db)
+    if register is not None:
+        targets = [
+            (dev, register) for dev, reg in store.measured_registers(station) if reg == register
+        ]
+        if not targets:
+            targets = [(device or "", register)]
+    else:
+        targets = store.measured_registers(station)
+
+    if not targets:
+        click.echo("no measurement history found")
+        return
+
+    results: list[RegisterTrend] = []
+    for dev, reg in targets:
+        values = [
+            measured
+            for hist_dev, measured in store.register_history(reg, station, device)
+            if device is None or hist_dev == device
+        ]
+        if not values:
+            continue
+        results.append(analyse_register(reg, dev, values, limit))
+
+    if not results:
+        click.echo("no measurement history found")
+        return
+
+    if export_path is not None:
+        markdown = render_trends_markdown(results)
+        if export_path == "-":
+            click.echo(markdown)
+        else:
+            Path(export_path).write_text(markdown)
+            click.echo(f"trend report: {export_path}")
+        return
+
+    for trend in results:
+        click.echo(trend.summary_line())
 
 
 @cli.command()

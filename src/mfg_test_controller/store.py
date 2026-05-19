@@ -161,3 +161,46 @@ class RunStore:
             runs = session.query(TestRun).order_by(TestRun.started_at.desc()).limit(limit).all()
             session.expunge_all()
             return runs
+
+    def register_history(
+        self,
+        register: str,
+        station: str | None = None,
+        device: str | None = None,
+    ) -> list[tuple[str, float]]:
+        """Return ``(device, measured)`` pairs for ``register``, oldest first.
+
+        Only read steps that recorded a measurement are returned. ``station``
+        filters by plan name and ``device`` filters by device name; rows are
+        ordered by run start time so the result is a time series.
+        """
+        with self.session() as session:
+            query = (
+                session.query(StepResult.device, StepResult.measured)
+                .join(TestRun, StepResult.run_id == TestRun.id)
+                .filter(StepResult.register == register)
+                .filter(StepResult.action == "read")
+                .filter(StepResult.measured.isnot(None))
+            )
+            if station is not None:
+                query = query.filter(TestRun.plan_name == station)
+            if device is not None:
+                query = query.filter(StepResult.device == device)
+            rows = query.order_by(TestRun.started_at, StepResult.run_id).all()
+            return [(dev, float(measured)) for dev, measured in rows]
+
+    def measured_registers(self, station: str | None = None) -> list[tuple[str, str]]:
+        """Return the distinct ``(device, register)`` pairs with read history."""
+        with self.session() as session:
+            query = (
+                session.query(StepResult.device, StepResult.register)
+                .join(TestRun, StepResult.run_id == TestRun.id)
+                .filter(StepResult.action == "read")
+                .filter(StepResult.measured.isnot(None))
+            )
+            if station is not None:
+                query = query.filter(TestRun.plan_name == station)
+            pairs: set[tuple[str, str]] = set()
+            for dev, reg in query.distinct().all():
+                pairs.add((dev, reg))
+            return sorted(pairs)

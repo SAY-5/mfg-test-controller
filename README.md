@@ -78,9 +78,10 @@ report.
 | `server.py` | Async TCP server hosting a device |
 | `store.py` | SQLAlchemy: TestRun, StepResult, Device |
 | `report.py` | JSON and Markdown station reports |
+| `trends.py` | SPC trend analysis, drift detection, runs-to-failure |
 | `config.py` | Pydantic models and YAML loaders |
 | `runner.py` | Wires a plan to in-process devices over loopback |
-| `cli.py` | Click CLI: run, devices, report, replay, simulate-fault, serve |
+| `cli.py` | Click CLI: run, devices, report, replay, simulate-fault, serve, trends |
 
 ## Architecture
 
@@ -170,6 +171,29 @@ cost of the controller's fault-handling paths. `make bench-regress` compares a
 fresh run against the most recent stored result and fails the build if the
 mean per-cycle wall-clock drifts up by more than 30%. CI runs a small-scale
 bench-smoke pass on every push.
+
+## Trend analysis and drift detection
+
+A measured register can stay inside its threshold for many runs while it
+steadily walks toward the limit. `mfg-ctl trends` reads the stored run history
+and, per measured register, computes mean, standard deviation, min/max, a
+least-squares linear-fit slope (the per-run drift rate), and a Statistical
+Process Control control-chart classification of `in-control`, `trending`, or
+`out-of-control`.
+
+```
+mfg-ctl trends --station station_bringup            # summary per register
+mfg-ctl trends --register dc_voltage --station station_bringup --limit 5000
+mfg-ctl trends --station station_bringup --export trend-report.md
+```
+
+A register still passing its threshold but drifting toward a limit is flagged
+`trending`. When a `--limit` is supplied, the linear fit is extrapolated to the
+limit boundary to estimate the runs-to-failure: how many further runs before
+the measurement is expected to breach the threshold. `--export` writes a
+Markdown control-chart report; with no value it prints to stdout. See
+`docs/trend-analysis.md` for the SPC rules, the linear-fit method, and the
+runs-to-failure extrapolation.
 
 ## What this is not
 
