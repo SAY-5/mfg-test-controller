@@ -15,6 +15,7 @@ from mfg_test_controller.config import DeviceProfile, TestPlan
 from mfg_test_controller.controller.client import DeviceClient
 from mfg_test_controller.controller.sequencer import Sequencer, StationReport
 from mfg_test_controller.device.simulated import SimulatedDevice
+from mfg_test_controller.modbus.framing import Framer, FramingMode
 from mfg_test_controller.server import DeviceServer
 
 LOOPBACK = "127.0.0.1"
@@ -24,21 +25,26 @@ async def run_plan_locally(
     plan: TestPlan,
     profiles: Sequence[DeviceProfile],
     only_failed: list[str] | None = None,
+    framing: FramingMode = FramingMode.CUSTOM,
 ) -> StationReport:
-    """Run ``plan`` against in-process simulated devices and return the report."""
+    """Run ``plan`` against in-process simulated devices and return the report.
+
+    ``framing`` selects the wire format; the same plan and profiles run
+    identically under either ``custom`` or ``modbus-tcp`` framing.
+    """
     profile_by_name = {p.name: p for p in profiles}
     servers: dict[str, DeviceServer] = {}
 
     for name, profile in profile_by_name.items():
         device = SimulatedDevice(profile)
-        server = DeviceServer(device, LOOPBACK, 0)
+        server = DeviceServer(device, LOOPBACK, 0, framer=Framer(framing))
         await server.start()
         servers[name] = server
 
     async with AsyncExitStack() as stack:
         clients: dict[str, DeviceClient] = {}
         for name, server in servers.items():
-            client = DeviceClient(LOOPBACK, server.sockets_port)
+            client = DeviceClient(LOOPBACK, server.sockets_port, framer=Framer(framing))
             await stack.enter_async_context(client)
             clients[name] = client
 

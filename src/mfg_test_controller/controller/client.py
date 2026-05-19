@@ -1,9 +1,14 @@
 """Async TCP client that talks to simulated devices.
 
-The client encodes Modbus-style requests, sends them length-prefixed, and
-decodes the response. Exception frames are surfaced as :class:`ModbusException`;
-a missing or malformed reply (drop fault, delay timeout) is surfaced as
-:class:`DeviceTimeout` or :class:`DeviceError`.
+The client encodes Modbus-style requests, sends them over the configured wire
+format, and decodes the response. Exception frames are surfaced as
+:class:`ModbusException`; a missing or malformed reply (drop fault, delay
+timeout) is surfaced as :class:`DeviceTimeout` or :class:`DeviceError`.
+
+The wire format is chosen by the :class:`Framer` passed at construction:
+``custom`` for the hand-rolled 8-byte framing or ``modbus-tcp`` for real
+Modbus TCP MBAP framing. The request-building and response-decoding logic is
+identical in both modes; only the transport edge differs.
 """
 
 from __future__ import annotations
@@ -25,7 +30,8 @@ from mfg_test_controller.modbus.exceptions import (
     is_exception_frame,
 )
 from mfg_test_controller.modbus.frame import Frame, FrameError
-from mfg_test_controller.server import frame_message, read_message
+from mfg_test_controller.modbus.framing import Framer, FramingMode
+from mfg_test_controller.server import frame_wire_message, read_wire_message
 
 
 class DeviceError(Exception):
@@ -39,10 +45,18 @@ class DeviceTimeout(DeviceError):
 class DeviceClient:
     """A connection to one simulated device."""
 
-    def __init__(self, host: str, port: int, *, timeout: float = 2.0) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        *,
+        timeout: float = 2.0,
+        framer: Framer | None = None,
+    ) -> None:
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.framer = framer if framer is not None else Framer(FramingMode.CUSTOM)
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
 
@@ -68,17 +82,24 @@ class DeviceClient:
     async def __aexit__(self, *_exc: object) -> None:
         await self.close()
 
-    async def _exchange(self, request: bytes) -> bytes:
+    async def _exchange(self, request: bytes, payload: bytes = b"") -> bytes:
         if self._reader is None or self._writer is None:
             raise DeviceError("client is not connected")
-        self._writer.write(frame_message(request))
+        wire_request = self.framer.wrap_request(request, payload)
+        self._writer.write(frame_wire_message(wire_request, self.framer))
         await self._writer.drain()
         try:
-            return await asyncio.wait_for(read_message(self._reader), timeout=self.timeout)
+            wire_response = await asyncio.wait_for(
+                read_wire_message(self._reader, self.framer), timeout=self.timeout
+            )
         except asyncio.IncompleteReadError as exc:
             raise DeviceTimeout("device closed connection without replying") from exc
         except TimeoutError as exc:
             raise DeviceTimeout(f"device did not reply within {self.timeout}s") from exc
+        try:
+            return self.framer.unwrap_response(wire_response)
+        except FrameError as exc:
+            raise DeviceError(f"malformed wire response: {exc}") from exc
 
     @staticmethod
     def _raise_if_exception(response: bytes) -> None:
@@ -119,8 +140,8 @@ class DeviceClient:
     ) -> None:
         """Issue a Write Multiple Registers (0x10) request."""
         request = encode_write_multiple(unit_id, start_addr, len(values))
-        request += encode_register_block(values)
-        response = await self._exchange(request)
+        payload = encode_register_block(values)
+        response = await self._exchange(request, payload)
         self._raise_if_exception(response)
         try:
             Frame.decode(response)

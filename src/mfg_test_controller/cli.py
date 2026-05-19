@@ -15,6 +15,7 @@ from mfg_test_controller.config import (
 )
 from mfg_test_controller.device.profiles import builtin_profile, builtin_profile_names
 from mfg_test_controller.device.simulated import SimulatedDevice
+from mfg_test_controller.modbus.framing import Framer, FramingMode
 from mfg_test_controller.report import render_console, render_json, render_markdown
 from mfg_test_controller.runner import run_plan_locally
 from mfg_test_controller.server import DeviceServer
@@ -57,12 +58,19 @@ def cli() -> None:
 @click.option(
     "--md-out", type=click.Path(dir_okay=False), help="Write the Markdown report to this path."
 )
+@click.option(
+    "--framing",
+    type=click.Choice(["custom", "modbus-tcp"]),
+    default="custom",
+    help="Wire format: the hand-rolled framing or real Modbus TCP MBAP framing.",
+)
 def run(
     plan_path: str,
     only_failed: bool,
     db: str,
     json_out: str | None,
     md_out: str | None,
+    framing: str,
 ) -> None:
     """Run a YAML test plan against simulated devices over loopback TCP."""
     plan = load_test_plan(plan_path)
@@ -81,7 +89,9 @@ def run(
             click.echo("no failed steps in the most recent run; nothing to do")
             return
 
-    report = asyncio.run(run_plan_locally(plan, profiles, only_failed=only))
+    report = asyncio.run(
+        run_plan_locally(plan, profiles, only_failed=only, framing=FramingMode(framing))
+    )
     device_kinds = {p.name: p.kind for p in profiles}
     run_id = store.save_report(report, device_kinds)
 
@@ -239,12 +249,18 @@ def simulate_fault(
 )
 @click.option("--host", default="0.0.0.0")
 @click.option("--port", type=int, required=True)
-def serve(profile_path: str, host: str, port: int) -> None:
+@click.option(
+    "--framing",
+    type=click.Choice(["custom", "modbus-tcp"]),
+    default="custom",
+    help="Wire format: the hand-rolled framing or real Modbus TCP MBAP framing.",
+)
+def serve(profile_path: str, host: str, port: int, framing: str) -> None:
     """Serve a single simulated device over TCP (used by docker-compose)."""
     profile = load_device_profile(profile_path)
     device = SimulatedDevice(profile)
-    server = DeviceServer(device, host, port)
-    click.echo(f"serving {profile.name} on {host}:{port}")
+    server = DeviceServer(device, host, port, framer=Framer(FramingMode(framing)))
+    click.echo(f"serving {profile.name} on {host}:{port} ({framing})")
     try:
         asyncio.run(server.serve_forever())
     except KeyboardInterrupt:

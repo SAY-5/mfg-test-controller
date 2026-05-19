@@ -20,6 +20,17 @@ from mfg_test_controller.modbus.frame import (
     FunctionCode,
     crc16,
 )
+from mfg_test_controller.modbus.framing import (
+    Framer,
+    FramingMode,
+    parse_framing_mode,
+)
+from mfg_test_controller.modbus.mbap import (
+    MBAP_HEADER_LEN,
+    MbapMessage,
+    decode_mbap,
+    encode_mbap,
+)
 
 __all__ = [
     "Frame",
@@ -36,4 +47,11 @@ __all__ = [
     "ModbusException",
     "decode_exception",
     "encode_exception",
+    "Framer",
+    "FramingMode",
+    "parse_framing_mode",
+    "MBAP_HEADER_LEN",
+    "MbapMessage",
+    "decode_mbap",
+    "encode_mbap",
 ]

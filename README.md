@@ -9,11 +9,13 @@ TCP, so the whole pipeline is hermetic and runs in CI.
 
 ## What this studies
 
-- **A hand-rolled Modbus-style framing layer.** Function codes, register
-  addressing, and a CRC16 (polynomial 0xA001) on every frame. It is not a real
-  Modbus library, which is deliberate: the wire format is fully documented in
-  `docs/modbus-frame.md` and fully unit-tested, including a hypothesis property
-  test that random frames round-trip and that single-bit flips are caught.
+- **Two wire formats for the same four function codes.** The default
+  `custom` framing is a hand-rolled 8-byte frame with a CRC16 (polynomial
+  0xA001) on every frame, fully documented in `docs/modbus-frame.md`. The
+  `modbus-tcp` framing is real Modbus TCP with the standard MBAP header and is
+  wire-compatible with actual Modbus TCP devices and PLCs; see
+  `docs/modbus-tcp.md`. The `--framing` flag selects the mode, and device
+  profiles and test plans are framing-agnostic.
 - **Simulated devices with fault injection.** A `SimulatedDevice` holds a
   register map and answers frames. Devices can be configured to drift, freeze a
   register, delay a response, corrupt a CRC, or drop the connection. Fault
@@ -65,6 +67,8 @@ report.
 | `modbus/frame.py` | Fixed-length frame, CRC16, function codes |
 | `modbus/codec.py` | Encode/decode the four function codes |
 | `modbus/exceptions.py` | Exception frames |
+| `modbus/mbap.py` | Real Modbus TCP MBAP header encode/decode |
+| `modbus/framing.py` | `Framer`: custom vs modbus-tcp wire translation |
 | `device/simulated.py` | `SimulatedDevice` and its register map |
 | `device/profiles.py` | Built-in power_supply, dmm, actuator, thermocouple |
 | `device/faults.py` | Drift, stuck, delay, crc-corrupt, drop |
