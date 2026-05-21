@@ -1,0 +1,166 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0f1216;
+  --panel: #161b22;
+  --border: #2a3140;
+  --fg: #e6edf3;
+  --muted: #8a94a6;
+  --accent: #58a6ff;
+  --pass: #2ea043;
+  --fail: #f85149;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.brand {
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--fg);
+  letter-spacing: 0.02em;
+}
+
+.nav a {
+  margin-right: 1rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.nav a:hover {
+  color: var(--fg);
+}
+
+.content {
+  max-width: 1080px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem;
+}
+
+h1, h2 {
+  margin-top: 0;
+}
+
+table.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+table.grid th,
+table.grid td {
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+table.grid th {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.pass {
+  color: var(--pass);
+  font-weight: 600;
+}
+
+.fail {
+  color: var(--fail);
+  font-weight: 600;
+}
+
+tr.pass td:nth-child(6) {
+  color: var(--pass);
+  font-weight: 600;
+}
+
+tr.fail td:nth-child(6) {
+  color: var(--fail);
+  font-weight: 600;
+}
+
+button.run-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button.run-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+ol.step-list {
+  list-style: decimal inside;
+  padding: 0;
+  margin: 0.75rem 0 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+ol.step-list li {
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  font-family: ui-monospace, SFMono-Regular, "Menlo", monospace;
+  font-size: 0.88rem;
+}
+
+ol.step-list li.pass-row {
+  border-left-color: var(--pass);
+}
+
+ol.step-list li.fail-row {
+  border-left-color: var(--fail);
+}
+
+pre.md {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.8rem;
+  overflow-x: auto;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.footer {
+  max-width: 1080px;
+  margin: 2rem auto 1.5rem;
+  padding: 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

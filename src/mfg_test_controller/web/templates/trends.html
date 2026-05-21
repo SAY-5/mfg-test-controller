@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Trends{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Measurement trends</h1>
+  {% if trends %}
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>register</th>
+        <th>device</th>
+        <th>samples</th>
+        <th>mean</th>
+        <th>stddev</th>
+        <th>slope/run</th>
+        <th>state</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in trends %}
+      <tr>
+        <td>{{ t.register }}</td>
+        <td>{{ t.device }}</td>
+        <td>{{ t.samples }}</td>
+        <td>{{ '%g'|format(t.mean) }}</td>
+        <td>{{ '%g'|format(t.stddev) }}</td>
+        <td>{{ '%+g'|format(t.slope) }}</td>
+        <td>{{ t.state.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No measurement history yet. Run a plan to record measurements.</p>
+  {% endif %}
+</section>
+{% if markdown %}
+<section class="card">
+  <h2>Markdown report</h2>
+  <pre class="md">{{ markdown }}</pre>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}mfg-test-controller{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('index') }}">mfg-test-controller</a>
+      <nav class="nav">
+        <a href="{{ url_for('index') }}">home</a>
+        <a href="{{ url_for('list_runs') }}">runs</a>
+        <a href="{{ url_for('trends_view') }}">trends</a>
+      </nav>
+    </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+      <span>mfg-test-controller web ui</span>
+    </footer>
+  </body>
+</html>

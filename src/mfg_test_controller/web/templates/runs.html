@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}All runs{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>All runs</h1>
+  {% if runs %}
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>id</th>
+        <th>plan</th>
+        <th>verdict</th>
+        <th>passed</th>
+        <th>duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td><a href="{{ url_for('show_run', run_id=r.id) }}">#{{ r.id }}</a></td>
+        <td>{{ r.plan }}</td>
+        <td class="{{ 'pass' if r.verdict == 'PASS' else 'fail' }}">{{ r.verdict }}</td>
+        <td>{{ r.passed }}/{{ r.total }}</td>
+        <td>{{ '%.3f'|format(r.duration_s) }} s</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No runs recorded yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
