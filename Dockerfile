@@ -22,5 +22,7 @@ RUN pip install /tmp/*.whl && rm /tmp/*.whl
 COPY profiles ./profiles
 COPY plans ./plans
 
+EXPOSE 5050
+
 ENTRYPOINT ["mfg-ctl"]
 CMD ["--help"]

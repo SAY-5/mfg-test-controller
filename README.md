@@ -60,6 +60,28 @@ still performs all 11 register operations. What collapses is the manual
 connect/transcribe/compare loop, which becomes one command and a recorded
 report.
 
+## Web UI
+
+A small Flask web UI wraps the same modules the CLI uses. It lists plans on
+disk, kicks off a run in a background thread, and streams each step to the
+browser over Server-Sent Events so an operator can watch the plan execute
+step-by-step. Web-driven runs persist through the same `RunStore` as CLI
+runs, so the history table is shared.
+
+```
+poetry run mfg-ctl serve-web --port 5050
+# open http://127.0.0.1:5050 in a browser
+```
+
+Routes: `/` lists plans and recent runs, `/plans` is JSON, `POST
+/plans/<name>/run` allocates a run id and starts the plan, `/runs/stream/<id>`
+is the SSE stream, `/runs/<int:id>` renders a stored run, `/runs` lists all
+runs, `/trends` reuses the trend analysis, `/healthz` returns `ok`.
+
+Pages render in vanilla HTML and a small static JS bundle; the live-run view
+uses the browser `EventSource` API. A placeholder for a screenshot lives at
+`docs/web-ui.md`.
+
 ## Modules
 
 | Module | Responsibility |
@@ -81,7 +103,8 @@ report.
 | `trends.py` | SPC trend analysis, drift detection, runs-to-failure |
 | `config.py` | Pydantic models and YAML loaders |
 | `runner.py` | Wires a plan to in-process devices over loopback |
-| `cli.py` | Click CLI: run, devices, report, replay, simulate-fault, serve, trends |
+| `web/app.py` | Flask app, SSE broker, route handlers |
+| `cli.py` | Click CLI: run, devices, report, replay, simulate-fault, serve, serve-web, trends |
 
 ## Architecture
 

@@ -129,6 +129,39 @@ controller still performs all 11 register operations on every run. What
 collapses is the manual connect / transcribe / compare loop, which the
 controller automates and the SQLite store records.
 
+## Web layer
+
+The optional Flask web UI in `web/app.py` is a thin adapter over the
+existing modules, not a re-implementation. The same `Sequencer`, `RunStore`,
+and `trends` code that the CLI uses also backs the browser, so a web-driven
+run is byte-for-byte the same as `mfg-ctl run`.
+
+The interesting piece is the live step stream. The browser opens a Server-
+Sent Events connection to `/runs/stream/<run_id>` and receives one `step`
+event per outcome plus a terminal `done` event. The server side has three
+components:
+
+- A `RunBroker` that holds a per-run thread-safe queue and a completion
+  event. The broker is process-local: a single `serve-web` process owns its
+  run state and restart loses any in-flight runs. Completed runs remain in
+  SQLite.
+- A background `threading.Thread` that constructs a fresh `asyncio` loop,
+  awaits `run_plan_locally`, and publishes one queue entry per outcome. The
+  thread terminates by publishing either a `done` or `error` event.
+- A streaming Flask response that reads from the queue with a 30-second
+  blocking `get`, formats each entry as an SSE block, and emits a keepalive
+  comment when the queue is idle.
+
+SSE was chosen over WebSockets because step events only flow server-to-
+client, the browser `EventSource` API handles reconnection and parsing on
+its own, and the SSE wire format is plain text that the integration tests
+parse with a few lines of split-and-decode rather than a WebSocket client.
+
+`mfg-ctl serve-web` boots the app under `waitress`, the same pure-Python
+WSGI server `pip` itself uses for its index server, so the production
+dependency footprint stays in the standard ecosystem and there is no C
+extension to compile.
+
 ## Hermetic execution
 
 There is no real hardware and no external network. The `runner` module starts

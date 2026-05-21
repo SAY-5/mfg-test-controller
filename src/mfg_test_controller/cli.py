@@ -25,6 +25,7 @@ from mfg_test_controller.trends import (
     analyse_register,
     render_trends_markdown,
 )
+from mfg_test_controller.web import WebConfig, create_app
 
 DEFAULT_PROFILE_DIR = Path("profiles")
 
@@ -340,6 +341,62 @@ def serve(profile_path: str, host: str, port: int, framing: str) -> None:
     click.echo(f"serving {profile.name} on {host}:{port} ({framing})")
     try:
         asyncio.run(server.serve_forever())
+    except KeyboardInterrupt:
+        click.echo("stopped")
+
+
+@cli.command("serve-web")
+@click.option("--host", default="127.0.0.1", help="Interface to bind the web server to.")
+@click.option("--port", type=int, default=5050, help="Port to bind the web server to.")
+@click.option("--db", default="sqlite:///test-runs.db", help="Run history DB URL.")
+@click.option(
+    "--plans-dir",
+    default="plans",
+    type=click.Path(file_okay=False),
+    help="Directory containing plan YAML files.",
+)
+@click.option(
+    "--profiles-dir",
+    default="profiles",
+    type=click.Path(file_okay=False),
+    help="Directory containing device profile YAML files.",
+)
+@click.option(
+    "--framing",
+    type=click.Choice(["custom", "modbus-tcp"]),
+    default="custom",
+    help="Wire format used by web-driven runs.",
+)
+def serve_web(
+    host: str,
+    port: int,
+    db: str,
+    plans_dir: str,
+    profiles_dir: str,
+    framing: str,
+) -> None:
+    """Boot the Flask web UI on top of the existing controller modules."""
+    import os
+    import signal
+
+    from waitress import serve as waitress_serve  # type: ignore[import-untyped]
+
+    config = WebConfig(
+        db_url=db,
+        plans_dir=Path(plans_dir),
+        profiles_dir=Path(profiles_dir),
+        framing=FramingMode(framing),
+    )
+    app = create_app(config)
+    click.echo(f"mfg-ctl web ui on http://{host}:{port} (pid {os.getpid()})")
+
+    def _shutdown(signum: int, frame: object) -> None:
+        click.echo(f"received signal {signum}, shutting down")
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    try:
+        waitress_serve(app, host=host, port=port, _quiet=True)
     except KeyboardInterrupt:
         click.echo("stopped")
 
